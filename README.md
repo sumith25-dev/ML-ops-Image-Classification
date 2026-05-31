@@ -1,177 +1,150 @@
-<<<<<<< HEAD
-# ML-ops-Image-Classification
-=======
-# 🎨 Adobe MLOps Pipeline — Image Classifier
+# 🎨 Adobe MLOps Image Classifier
 
-> **Project 1** from the Adobe Machine Learning Engineer (2026 Batch) application.  
-> A production-grade MLOps system demonstrating model lifecycle management, CI/CD, A/B testing, drift detection, and observability.
+> **Built for Adobe Machine Learning Engineer (2026 Batch) Application**  
+> A production-grade MLOps pipeline that trains, deploys, monitors, and auto-retrains an image classification model — mirroring Adobe's real infrastructure for Firefly and Creative Cloud AI features.
+
+[![CI/CD](https://github.com/sumith25-dev/ML-ops-Image-Classification/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/sumith25-dev/ML-ops-Image-Classification/actions)
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.3.0-orange)
+![MLflow](https://img.shields.io/badge/MLflow-2.13.0-blue)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue)
+
+---
+
+## 🏆 What I Built
+
+A complete end-to-end MLOps system with:
+
+- **Image Classification API** — EfficientNet-B0 model trained on 14,000 real images achieving **86.85% validation accuracy**
+- **A/B Testing** — Deterministic per-user routing (80% stable / 20% canary) with instant rollback
+- **MLflow Tracking** — Full experiment tracking, model registry, and versioning
+- **Drift Detection** — Automatic data drift monitoring with Evidently AI
+- **CI/CD Pipeline** — GitHub Actions with lint, test, and Docker build stages ✅ Passing
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        GitHub Actions CI/CD                      │
-│   push → lint/test → Docker build → ECR push → Deploy          │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-        ┌───────────────────┼───────────────────┐
-        ▼                   ▼                   ▼
- ┌─────────────┐   ┌──────────────┐   ┌──────────────────┐
- │  FastAPI    │   │   MLflow     │   │    Airflow       │
- │  (A/B test) │   │  (registry)  │   │  (drift DAG)     │
- │  port 8000  │   │  port 5000   │   │  port 8080       │
- └──────┬──────┘   └──────────────┘   └──────────────────┘
-        │
-        ▼
- ┌─────────────────────────────────┐
- │  Prometheus (9090)              │
- │  Pushgateway (9091)             │
- │  Grafana Dashboard (3000)       │
- └─────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    GitHub Actions CI/CD                      │
+│         push → lint → test → Docker build → deploy         │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+        ┌───────────────┼───────────────┐
+        ▼               ▼               ▼
+ ┌─────────────┐ ┌──────────────┐ ┌──────────────────┐
+ │  FastAPI    │ │   MLflow     │ │   PostgreSQL     │
+ │  A/B Test   │ │  Registry    │ │   Database       │
+ │  port 8000  │ │  port 5001   │ │   port 5432      │
+ └─────────────┘ └──────────────┘ └──────────────────┘
 ```
+
+---
 
 ## 🛠️ Tech Stack
 
 | Category | Tools |
 |---|---|
-| **ML Framework** | PyTorch, EfficientNet-B0, Scikit-learn |
-| **MLOps** | MLflow (experiment tracking, model registry) |
-| **Orchestration** | Apache Airflow (drift-triggered retraining DAG) |
+| **ML Framework** | PyTorch 2.3, EfficientNet-B0, Scikit-learn |
+| **MLOps** | MLflow 2.13 (experiment tracking, model registry) |
 | **Serving** | FastAPI, Uvicorn |
 | **Containerisation** | Docker, Docker Compose |
-| **Cloud (AWS)** | SageMaker, ECR, S3 — via Terraform |
-| **CI/CD** | GitHub Actions |
-| **Monitoring** | Prometheus, Grafana, Evidently AI |
-| **Drift Detection** | Evidently AI (DataDriftPreset) |
+| **CI/CD** | GitHub Actions ✅ |
+| **Drift Detection** | Evidently AI |
+| **Database** | PostgreSQL |
+| **Cloud Ready** | Terraform (AWS ECR, S3, SageMaker) |
 
 ---
 
-## 🚀 Quick Start (Local — 5 minutes)
+## 📊 Model Performance
+
+| Metric | Value |
+|---|---|
+| **Model** | EfficientNet-B0 (ImageNet pretrained) |
+| **Dataset** | Intel Image Classification (14,000 real images) |
+| **Classes** | buildings, forest, glacier, mountain, sea, street |
+| **Training Epochs** | 5 |
+| **Best Val Accuracy** | **86.85%** |
+| **Model Version** | v2 (registered in MLflow) |
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Docker & Docker Compose installed
-- 8 GB RAM recommended
+- Docker Desktop installed
+- 4GB free disk space
 
-### 1. Clone & start all services
-
+### Run locally
 ```bash
-git clone <your-repo-url>
-cd mlops_project
-docker-compose up --build -d
+git clone https://github.com/sumith25-dev/ML-ops-Image-Classification.git
+cd ML-ops-Image-Classification
+docker-compose up -d api mlflow postgres
 ```
 
-### 2. Wait for services (~2 min), then verify
+### Open the UIs
 
-```bash
-docker-compose ps          # all should show "healthy"
-curl http://localhost:8000/health
-```
-
-### 3. Open the UIs
-
-| Service | URL | Credentials |
-|---|---|---|
-| **FastAPI docs** | http://localhost:8000/docs | — |
-| **MLflow UI** | http://localhost:5000 | — |
-| **Airflow** | http://localhost:8080 | admin / admin |
-| **Grafana** | http://localhost:3000 | admin / admin |
-| **Prometheus** | http://localhost:9090 | — |
+| Service | URL |
+|---|---|
+| **FastAPI docs** | http://localhost:8000/docs |
+| **MLflow UI** | http://localhost:5001 |
 
 ---
 
-## 🧪 Train a Model
+## 🧪 Test the API
 
 ```bash
-# Option A: Smoke test with synthetic data (no dataset needed)
-docker-compose exec api python model/train.py --epochs 2 --run_name smoke_test
-
-# Option B: Real data (ImageFolder layout: data/images/<class>/*.jpg)
-docker-compose exec api python model/train.py \
-  --data_dir /app/data/images \
-  --epochs 10 \
-  --run_name baseline_v1
-```
-
-After training:
-1. Open **MLflow UI** → Models → `image_classifier`
-2. Assign alias **`stable`** to the best version
-3. Restart the API: `docker-compose restart api`
-
----
-
-## 🎯 Test the API
-
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Predict (with a public image URL)
 curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
-  -d '{"image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png", "user_id": "user_001"}'
+  -d '{
+    "image_url": "https://images.pexels.com/photos/1547813/pexels-photo-1547813.jpeg",
+    "user_id": "user_001"
+  }'
+```
 
-# Force a specific model version (for A/B testing QA)
-curl -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{"image_url": "https://...", "user_id": "user_001", "force_version": "canary"}'
-
-# Trigger rollback (shift all traffic to stable)
-curl -X POST http://localhost:8000/rollback
+Response:
+```json
+{
+  "label": "forest",
+  "confidence": 0.87,
+  "model_version": "stable",
+  "latency_ms": 245.32
+}
 ```
 
 ---
 
-## 📊 Run Drift Detection
+## 🎯 Key Features
 
-```bash
-# Run manually
-docker-compose exec api python monitoring/drift_detector.py
+### 1. A/B Testing
+```
+User ID → MD5 Hash → Bucket (0-9999)
+  0-7999  → stable model  (80% traffic)
+  8000-9999 → canary model (20% traffic)
+```
+Same user always hits the same model — consistent experience.
 
-# Check results
-cat monitoring/latest_drift_results.json
-
-# Open generated HTML report
-open monitoring/reports/drift_report_*.html
+### 2. Model Lifecycle
+```
+Train → MLflow Registry → Assign 'stable' alias → API loads automatically
+                       → Assign 'canary' alias  → 20% traffic routed
 ```
 
-The **Airflow DAG** (`mlops_image_classifier_pipeline`) runs this hourly and auto-triggers retraining if:
-- >30% of features have drifted, **or**
-- Model accuracy drops below 80%
-
----
-
-## 🧪 Run Tests
-
-```bash
-# Run all unit tests
-docker-compose exec api pytest tests/ -v
-
-# With coverage
-docker-compose exec api pytest tests/ -v --cov=app --cov=monitoring
+### 3. Drift Detection
+```
+Run drift_detector.py
+→ If drift > 30% OR accuracy < 80%
+→ Flag for retraining
+→ Promote new model to canary
 ```
 
----
-
-## ☁️ AWS Deployment
-
-```bash
-cd infra
-
-# 1. Configure AWS credentials
-aws configure
-
-# 2. Deploy infrastructure
-terraform init
-terraform plan -var="environment=dev"
-terraform apply -var="environment=dev"
-
-# 3. Push Docker image to ECR (output from terraform)
-ECR_URL=$(terraform output -raw ecr_repo_url)
-aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL
-docker build -t $ECR_URL:stable .
-docker push $ECR_URL:stable
+### 4. CI/CD Pipeline
+```
+git push → GitHub Actions
+         → Lint (ruff)      ✅
+         → Unit Tests       ✅
+         → Docker Build     ✅
 ```
 
 ---
@@ -179,26 +152,25 @@ docker push $ECR_URL:stable
 ## 📁 Project Structure
 
 ```
-mlops_project/
+ML-ops-Image-Classification/
 ├── app/
-│   ├── main.py              # FastAPI app — predict, health, metrics, rollback
-│   └── model_manager.py     # Model loading, A/B routing, inference
+│   ├── main.py              # FastAPI — predict, health, metrics, rollback
+│   └── model_manager.py     # MLflow loading, A/B routing, inference
 ├── model/
 │   └── train.py             # EfficientNet training with MLflow tracking
 ├── monitoring/
-│   └── drift_detector.py    # Evidently-based drift analysis
+│   └── drift_detector.py    # Evidently drift analysis
 ├── pipeline/
 │   └── mlops_dag.py         # Airflow DAG — drift → retrain → promote
 ├── tests/
-│   └── test_api.py          # Unit tests (FastAPI + ModelManager)
+│   └── test_api.py          # Unit tests
 ├── infra/
-│   ├── main.tf              # Terraform — ECR, S3, SageMaker, IAM
-│   ├── prometheus.yml       # Prometheus scrape config
-│   └── grafana/             # Auto-provisioned Grafana dashboard
+│   ├── main.tf              # Terraform — AWS ECR, S3, SageMaker
+│   └── prometheus.yml       # Prometheus config (future deployment)
 ├── notebooks/
-│   └── exploration.ipynb    # EDA, drift visualisation, A/B analysis
+│   └── exploration.ipynb    # EDA and drift visualisation
 ├── .github/workflows/
-│   └── ci_cd.yml            # GitHub Actions — test → build → deploy
+│   └── ci_cd.yml            # GitHub Actions CI/CD ✅ passing
 ├── docker-compose.yml       # Full local stack
 ├── Dockerfile               # API container
 └── requirements.txt
@@ -206,15 +178,59 @@ mlops_project/
 
 ---
 
-## 🎤 Interview Talking Points (Adobe-specific)
+## 🌊 Drift Detection
 
-1. **Model lifecycle**: MLflow registry with `stable`/`canary` aliases enables zero-downtime promotion and instant rollback — same pattern Adobe uses for Firefly model updates.
+```python
+# Run manually or schedule via Airflow
+python monitoring/drift_detector.py
 
-2. **A/B testing**: Deterministic per-user hash routing means users get consistent experiences across requests (no flipping), while the split is configurable at runtime.
+# Auto-retraining triggers when:
+# - drift_share >= 30% of features drifted
+# - model accuracy < 80%
+```
 
-3. **CI/CD**: GitHub Actions pipeline with OIDC auth (no long-lived secrets), ECR image scanning on push, blue/green SageMaker deployment, automated smoke tests.
+---
 
-4. **Drift monitoring**: Evidently detects covariate shift (data drift) and concept drift independently. Airflow auto-retrains when thresholds are breached — closing the ML feedback loop.
+## ☁️ AWS Deployment (Ready)
 
-5. **Governance**: All model versions tracked in MLflow with params, metrics, and artifacts. Rollback takes one API call. Audit trail is automatic.
->>>>>>> c4e3be1 (Initial commit)
+```bash
+cd infra
+terraform init
+terraform apply -var="environment=prod"
+```
+
+Provisions:
+- ECR repository for Docker images
+- S3 bucket for MLflow artifacts
+- SageMaker endpoint with blue/green deployment
+- IAM roles and policies
+
+---
+
+## 🎤 Adobe Interview Talking Points
+
+1. **86.85% accuracy** on 14,000 real images using EfficientNet-B0
+
+2. **A/B testing** — Deterministic per-user hash routing for consistent user experience, configurable split at runtime
+
+3. **CI/CD** — Every commit automatically lints, tests, and builds Docker image via GitHub Actions ✅
+
+4. **Drift detection** — Evidently AI detects when production data drifts from training distribution, triggering automatic retraining
+
+5. **MLflow registry** — Complete model versioning with aliases, metrics tracking, and artifact storage
+
+6. **Zero-downtime deployment** — Blue/green deployment with instant rollback via single API call
+
+---
+
+## 👨‍💻 Author
+
+**Sumit** — Applying for Adobe Machine Learning Engineer (2026 Batch)
+
+GitHub: [@sumith25-dev](https://github.com/sumith25-dev)
+
+---
+
+## 📄 License
+
+MIT License
