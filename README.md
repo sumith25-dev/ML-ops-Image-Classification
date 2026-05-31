@@ -227,7 +227,7 @@ Provisions:
 
 ## 👨‍💻 Author
 
-**Sumit** — Applying for Adobe Machine Learning Engineer (2026 Batch)
+**Sumith B R** — Applying for Adobe Machine Learning Engineer (2026 Batch)
 
 GitHub: [@sumith25-dev](https://github.com/sumith25-dev)
 
