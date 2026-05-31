@@ -27,8 +27,11 @@ DRIFT_SCORE     = Counter("data_drift_detected_total", "Times drift was detected
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Loading models from MLflow registry...")
-    app.state.model_manager = ModelManager()
-    app.state.model_manager.load_models()
+    if getattr(app.state, "model_manager", None) is None:
+        app.state.model_manager = ModelManager()
+        app.state.model_manager.load_models()
+    else:
+        logger.info("Using existing model manager from app.state.")
     yield
     logger.info("Shutting down model manager.")
 
