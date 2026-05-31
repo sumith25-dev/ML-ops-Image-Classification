@@ -3,7 +3,6 @@ Adobe ML Engineer Project 1 - MLOps Pipeline
 FastAPI serving layer with A/B testing and monitoring hooks
 """
 
-import os
 import time
 import logging
 from contextlib import asynccontextmanager

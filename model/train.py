@@ -177,13 +177,13 @@ def main(args):
         logger.info(f"Model registered. Run ID: {run.info.run_id}")
         logger.info(f"Best val accuracy: {best_val_acc:.2%}")
 
-        print(f"\n✅  Training complete!")
+        print("\n✅  Training complete!")
         print(f"   Run ID     : {run.info.run_id}")
         print(f"   Best val acc: {best_val_acc:.2%}")
         print(f"   Model URI  : {model_info.model_uri}")
-        print(f"\nNext steps:")
-        print(f"  1. Open MLflow UI → http://localhost:5000")
-        print(f"  2. Go to Models → image_classifier → assign alias 'stable'")
+        print("\nNext steps:")
+        print("  1. Open MLflow UI → http://localhost:5000")
+        print("  2. Go to Models → image_classifier → assign alias 'stable'")
 
 
 if __name__ == "__main__":

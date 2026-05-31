@@ -4,7 +4,6 @@ handles A/B traffic routing, and runs inference.
 """
 
 import os
-import random
 import hashlib
 import logging
 from typing import Tuple
