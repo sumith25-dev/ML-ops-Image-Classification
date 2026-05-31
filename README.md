@@ -22,6 +22,8 @@ A complete end-to-end MLOps system with:
 - **CI/CD Pipeline** — GitHub Actions with lint, test, and Docker build stages ✅ Passing
 
 ---
+Here  click my [@project-website] (https://ml-ops-image-classification-production.up.railway.app/docs#/default/predict_predict_post)
+I trained of 5 epochs, if it trained around 10 epochs then it confidence will increase from 20 to 80-90 percent
 
 ## 🏗️ Architecture
 
@@ -207,8 +209,7 @@ Provisions:
 
 ---
 
-Here  click my [@project-website] (https://ml-ops-image-classification-production.up.railway.app/docs#/default/predict_predict_post)
-I trained of 5 epochs, if it trained around 10 epochs then it confidence will increase from 20 to 80-90 per
+
 
 1. **86.85% accuracy** on 14,000 real images using EfficientNet-B0
 
