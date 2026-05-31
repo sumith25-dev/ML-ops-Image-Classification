@@ -66,7 +66,7 @@ I trained of 5 epochs, if it trained around 10 epochs then it confidence will in
 | **Model** | EfficientNet-B0 (ImageNet pretrained) |
 | **Dataset** | Intel Image Classification (14,000 real images) |
 | **Classes** | buildings, forest, glacier, mountain, sea, street |
-| **Training Epochs** | 5 |
+| **Training Epochs** | 10 |
 | **Best Val Accuracy** | **86.85%** |
 | **Model Version** | v2 (registered in MLflow) |
 
