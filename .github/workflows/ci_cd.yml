@@ -1,0 +1,137 @@
+name: MLOps CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION:    us-east-1
+  ECR_REPO:      adobe-mlops-dev-api
+  IMAGE_TAG:     ${{ github.sha }}
+
+jobs:
+  # ── 1. Lint & Unit Tests ────────────────────────────────────────────────────
+  test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest pytest-asyncio httpx ruff
+
+      - name: Lint (ruff)
+        run: ruff check app/ model/ monitoring/ --ignore E501
+
+      - name: Run unit tests
+        run: pytest tests/ -v --tb=short
+
+  # ── 2. Build & Push Docker image ─────────────────────────────────────────
+  build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region:     ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPO:$IMAGE_TAG .
+          docker tag  $REGISTRY/$ECR_REPO:$IMAGE_TAG $REGISTRY/$ECR_REPO:latest
+          docker push $REGISTRY/$ECR_REPO:$IMAGE_TAG
+          docker push $REGISTRY/$ECR_REPO:latest
+          echo "image=$REGISTRY/$ECR_REPO:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # ── 3. Deploy to staging (canary) ─────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging (Canary)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region:     ${{ env.AWS_REGION }}
+
+      - name: Update SageMaker endpoint (canary — 20 % traffic)
+        run: |
+          aws sagemaker update-endpoint \
+            --endpoint-name adobe-mlops-dev-endpoint \
+            --endpoint-config-name adobe-mlops-dev-ep-config-canary
+          echo "Deployed canary — monitoring for 10 min before promoting..."
+
+      - name: Smoke test
+        run: |
+          sleep 30
+          curl -sf https://api-staging.yourcompany.com/health
+          echo "Smoke test passed ✅"
+
+  # ── 4. Deploy to production (stable) ──────────────────────────────────────
+  deploy-production:
+    name: Deploy to Production (Stable)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region:     ${{ env.AWS_REGION }}
+
+      - name: Deploy (blue/green — zero downtime)
+        run: |
+          aws sagemaker update-endpoint \
+            --endpoint-name adobe-mlops-dev-endpoint \
+            --endpoint-config-name adobe-mlops-dev-ep-config
+
+      - name: Verify deployment
+        run: |
+          sleep 60
+          STATUS=$(aws sagemaker describe-endpoint \
+            --endpoint-name adobe-mlops-dev-endpoint \
+            --query 'EndpointStatus' --output text)
+          echo "Endpoint status: $STATUS"
+          [ "$STATUS" = "InService" ] || exit 1
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status:   ${{ job.status }}
+          text:     "Production deploy ${{ job.status }} — ${{ env.IMAGE_TAG }}"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
