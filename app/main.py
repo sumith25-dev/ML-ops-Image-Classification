@@ -5,12 +5,9 @@ FastAPI serving layer with A/B testing and monitoring hooks
 
 import os
 import time
-import random
 import logging
 from contextlib import asynccontextmanager
 
-import mlflow
-import mlflow.pytorch
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
