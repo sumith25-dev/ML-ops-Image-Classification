@@ -3,10 +3,14 @@ Adobe ML Engineer Project 1 - MLOps Pipeline
 FastAPI serving layer with A/B testing and monitoring hooks
 """
 
+import os
 import time
+import random
 import logging
 from contextlib import asynccontextmanager
 
+import mlflow
+import mlflow.pytorch
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -27,11 +31,8 @@ DRIFT_SCORE     = Counter("data_drift_detected_total", "Times drift was detected
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Loading models from MLflow registry...")
-    if getattr(app.state, "model_manager", None) is None:
-        app.state.model_manager = ModelManager()
-        app.state.model_manager.load_models()
-    else:
-        logger.info("Using existing model manager from app.state.")
+    app.state.model_manager = ModelManager()
+    app.state.model_manager.load_models()
     yield
     logger.info("Shutting down model manager.")
 

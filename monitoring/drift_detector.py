@@ -8,7 +8,7 @@ Results are logged to MLflow and Prometheus push gateway.
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np

@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+# ML-ops-Image-Classification
+=======
 # 🎨 Adobe MLOps Pipeline — Image Classifier
 
 > **Project 1** from the Adobe Machine Learning Engineer (2026 Batch) application.  
@@ -214,4 +217,4 @@ mlops_project/
 4. **Drift monitoring**: Evidently detects covariate shift (data drift) and concept drift independently. Airflow auto-retrains when thresholds are breached — closing the ML feedback loop.
 
 5. **Governance**: All model versions tracked in MLflow with params, metrics, and artifacts. Rollback takes one API call. Audit trail is automatic.
-
+>>>>>>> c4e3be1 (Initial commit)
